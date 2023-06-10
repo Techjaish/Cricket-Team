@@ -1,0 +1,13 @@
+URL http://localhost:3000/players/
+###
+
+URL http://localhost:3001/players/
+###
+
+URL http://localhost:3000/players/
+###
+
+URL  http://localhost:3001/players/:1/
+###
+
+URL http://localhost:3001/players/

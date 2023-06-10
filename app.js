@@ -17,8 +17,8 @@ const initializeDBAndServer = async () => {
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    app.listen(3000, () => {
-      console.log("Server Running at http://localhost:3000/");
+    app.listen(3001, () => {
+      console.log("Server Running at http://localhost:3001/");
     });
   } catch (e) {
     console.log(`DB Error: ${e.message}`);
@@ -27,21 +27,23 @@ const initializeDBAndServer = async () => {
 };
 
 initializeDBAndServer();
-// get API
+// get API1
 app.get("/players/", async (request, response) => {
-  const getPlayerData = `SELECT * FROM cricket_team;`;
+  const getPlayerData = `SELECT * FROM cricket_team ORDER BY playerId;`;
   const playersList = await db.all(getPlayerData);
-  response.send(playersList);
+  const convertDbObjectToResponse = (listObj) => {
+    return {
+      playerId: listObj.player_id,
+      jerseyNumber: listObj.jersey_number,
+      role: listObj.role,
+    };
+  };
+  response.send(
+    playersList.map((eachPlayer) => convertDbObjectToResponse(eachPlayer))
+  );
 });
 
-// add API
-app.get("/players/", async (request, response) => {
-  const getPlayerData = `SELECT * FROM cricket_team;`;
-  const playersList = await db.all(getPlayerData);
-  response.send(playersList);
-});
-
-// add API
+// post API2
 app.post("/players/", async (request, response) => {
   const dataobj = request.body;
   const { playerName, jerseyNumber, role } = dataobj;
@@ -49,34 +51,55 @@ app.post("/players/", async (request, response) => {
     VALUES
     (
         ${playerName}, ${jerseyName}, ${role});`;
-  await db.all(updatedData);
-  response.send("Player Add Team");
+  await db.run(updatedData);
+  response.send("Player Added to Team");
 });
 
-//get API 2
-app.post("/players/:playerId/", async (request, response) => {
+//get API3
+app.get("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
-  const updatedData = `SELECT * FROM cricket_team WHERE playerId = ${playerId};`;
+  const updatedData = `SELECT
+      *
+    FROM
+      cricket_team
+    WHERE
+      playerId = ${playerId};`;
   const specifiedData = await db.get(updatedData);
-  response.send(specifiedData);
+  const convertDbObjectToResponse = (listObj) => {
+    return {
+      playerId: listObj.player_id,
+      jerseyNumber: listObj.jersey_number,
+      role: listObj.role,
+    };
+  };
+  response.send(
+    playersList.map((eachPlayer) => convertDbObjectToResponse(eachPlayer))
+  );
 });
 
-//update API
+// update API4
 app.put("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
   const dataobj = request.body;
   const { playerName, jerseyNumber, role } = dataobj;
-  const updatedData = `UPDATE cricket_team SET playerName = ${playerName},
-  jerseyNumber = ${jerseyNumber},
-  role = ${role} WHERE playerId = ${playerId}`;
-  const specifiedData = await db.get(updatedData);
+  const updatedData = `UPDATE
+    cricket_team
+  SET
+    player_name = '${playerName}',
+    jersey_number = ${jerseyNumber},
+    role = '${role}'
+  WHERE
+    player_id = ${playerId}`;
+  await db.run(updatedData);
   response.send("Player Details Updated");
 });
-//delete API
-app.post("/players/:playerId/", async (request, response) => {
+
+//DELETE API5
+
+app.delete("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
   const updatedData = `DELETE FROM cricket_team WHERE playerId = ${playerId};`;
-  const specifiedData = await db.get(updatedData);
+  await db.run(updatedData);
   response.send("Player Removed");
 });
 
